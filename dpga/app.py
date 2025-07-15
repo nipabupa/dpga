@@ -1,15 +1,11 @@
 import ctypes
-from typing import Callable
-from tkinter import filedialog, messagebox
 import dearpygui.dearpygui as dpg
 from contextlib import contextmanager
+from typing import Callable
+from tkinter import filedialog, messagebox
 
-from dpga.utils import create_uuid
 from .theme import Size, Style
-
-
-FONTS = 'assets/fonts.json'
-IMGS = 'assets/imgs'
+from .utils import Resource
 
 
 class AppInfo:
@@ -90,38 +86,68 @@ def _prepare(info: AppInfo, views: list):
     dpi = v // 96
     # 加载尺寸信息
     Size.set_base(info.base * dpi)
+    info.width *= dpi
+    info.min_width *= dpi
+    info.height *= dpi
+    info.min_height *= dpi
     # 创建UUID
-    create_uuid(Style)
+    _create_uuid(Style)
     for obj in views:
-        create_uuid(obj)
+        _create_uuid(obj)
     # 加载字体, 主题
-    Style.load_fonts(FONTS)
-    Style.load_imgs(IMGS)
+    Style.load_fonts()
+    Style.load_imgs()
+    Style.load_style()
 
 
-def _common_ui():
+def _common_ui(info: AppInfo):
     """公共UI
     """
+    # header
+    dpg.add_spacer(height=Size.window_padding_y * 2)
+    dpg.add_text(info.title, pos=(Size.window_padding_x, Size.window_padding_y))
+    dpg.add_image_button('minus.png',
+                         width=Size.window_padding_x,
+                         height=Size.window_padding_x,
+                         pos=(info.width - Size.window_padding_x * 5, Size.window_padding_y),
+                         callback=lambda: dpg.minimize_viewport())
+    dpg.add_image_button('zoom.png',
+                         width=Size.window_padding_x,
+                         height=Size.window_padding_x,
+                         pos=(info.width - int(Size.window_padding_x * 3.5), Size.window_padding_y))
+    dpg.add_image_button('close.png',
+                         width=Size.window_padding_x,
+                         height=Size.window_padding_x,
+                         pos=(info.width - Size.window_padding_x * 2, Size.window_padding_y),
+                         callback=info.on_close if info.on_close is not None else lambda: dpg.stop_dearpygui())
     # 拖拽
     with dpg.handler_registry():
         dpg.add_mouse_drag_handler(button=0, threshold=0.0, callback=_drag_viewport)
 
 
+def _create_uuid(obj):
+    for attr in dir(obj):
+        if attr.startswith('uuid_'):
+            setattr(obj, attr, dpg.generate_uuid())
+
+
 @contextmanager
 def build_app(info: AppInfo, views=[]):
+    # 初始化全局资源
+    Resource.init(info.app_name)
     # 启动APP
     dpg.create_context()
     _prepare(info, views)
     dpg.create_viewport(
         title=info.app_name,
-        width=600, height=200,
+        width=info.width, height=info.height,
         min_width=info.min_width, min_height=info.min_height,
         resizable=info.resizable,
-        decorated=True)
+        decorated=False)
     win = dpg.add_window()
     dpg.set_primary_window(win, True)
     dpg.push_container_stack(win)
-    _common_ui()
+    _common_ui(info)
     yield
     dpg.pop_container_stack()
     dpg.setup_dearpygui()
@@ -130,9 +156,9 @@ def build_app(info: AppInfo, views=[]):
     dpg.destroy_context()
 
 
-def _drag_viewport(sender, app_data):
+def _drag_viewport(_, app_data):
     _, drag_dx, drag_dy = app_data
     drag_start_y = dpg.get_mouse_pos(local=False)[1] - drag_dy
-    if drag_start_y < 40:
+    if drag_start_y < Size.window_padding_y * 3:
         x_pos, y_pos = dpg.get_viewport_pos()
         dpg.set_viewport_pos((x_pos + drag_dx, max(0, y_pos + drag_dy)))  # type: ignore
