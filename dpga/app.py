@@ -101,25 +101,41 @@ def _prepare(info: AppInfo, views: list):
 
 
 def _common_ui(info: AppInfo):
-    """公共UI
+    """
+    公共UI
     """
     # header
-    dpg.add_spacer(height=Size.window_padding_y * 2)
-    dpg.add_text(info.title, pos=(Size.window_padding_x, Size.window_padding_y))
-    dpg.add_image_button('minus.png',
-                         width=Size.window_padding_x,
-                         height=Size.window_padding_x,
-                         pos=(info.width - Size.window_padding_x * 5, Size.window_padding_y),
-                         callback=lambda: dpg.minimize_viewport())
-    dpg.add_image_button('zoom.png',
-                         width=Size.window_padding_x,
-                         height=Size.window_padding_x,
-                         pos=(info.width - int(Size.window_padding_x * 3.5), Size.window_padding_y))
-    dpg.add_image_button('close.png',
-                         width=Size.window_padding_x,
-                         height=Size.window_padding_x,
-                         pos=(info.width - Size.window_padding_x * 2, Size.window_padding_y),
-                         callback=info.on_close if info.on_close is not None else lambda: dpg.stop_dearpygui())
+    with dpg.table(header_row=False, borders_outerH=True, borders_innerV=True):
+        Style.set_table()
+        dpg.add_table_column(width_fixed=True)
+        dpg.add_table_column(width_stretch=True)
+        dpg.add_table_column(width_fixed=True)
+        with dpg.table_row():
+            dpg.add_text(info.title)
+            dpg.add_spacer()
+            with dpg.group(horizontal=True, horizontal_spacing=Size.base // 2):
+                if info.resizable:
+                    dpg.add_image_button('minus.png',
+                                         width=Size.base,
+                                         height=Size.window_padding_x,
+                                         callback=lambda: dpg.minimize_viewport())
+                    dpg.add_image_button('zoom.png',
+                                         width=Size.base,
+                                         height=Size.window_padding_x,
+                                         callback=lambda: dpg.maximize_viewport())
+                    dpg.add_image_button('close.png',
+                                         width=Size.window_padding_x,
+                                         height=Size.window_padding_x,
+                                         callback=info.on_close if info.on_close is not None else lambda: dpg.stop_dearpygui())
+                else:
+                    dpg.add_image_button('minus.png',
+                                         width=Size.window_padding_x,
+                                         height=Size.window_padding_x,
+                                         callback=lambda: dpg.minimize_viewport())
+                    dpg.add_image_button('close.png',
+                                         width=Size.window_padding_x,
+                                         height=Size.window_padding_x,
+                                         callback=info.on_close if info.on_close is not None else lambda: dpg.stop_dearpygui())
     # 拖拽
     with dpg.handler_registry():
         dpg.add_mouse_drag_handler(button=0, threshold=0.0, callback=_drag_viewport)

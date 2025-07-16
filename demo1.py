@@ -10,7 +10,7 @@ info.width = 800
 info.min_width = 800
 info.height = 600
 info.min_height = 600
-info.resizable = False
+info.resizable = True
 
 
 with build_app(info):

@@ -97,6 +97,44 @@ class _Style:
                 dpg.add_static_texture(width=width, height=height, default_value=data, tag=tag)
 
     def load_style(self):
+        self.__global_style()
+        self.__child_window_style()
+        self.__custom_widget_style()
+
+    def __global_style(self):
+        with dpg.theme() as global_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, Size.base, Size.base, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_WindowBorderSize, 0, 0, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, Size.base // 2, Size.base // 2, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_ScrollbarSize, Size.base // 2, Size.base // 2, category=dpg.mvThemeCat_Core)
+                # dpg.add_theme_style(dpg.mvStyleVar_ItemSpacing, Size.base // 2, Size.base // 2, category=dpg.mvThemeCat_Core)
+                # dpg.add_theme_style(dpg.mvStyleVar_ItemInnerSpacing, Size.base // 4, Size.base // 4, category=dpg.mvThemeCat_Core)
+                # dpg.add_theme_style(dpg.mvStyleVar_FramePadding, Size.base, Size.base // 2, category=dpg.mvThemeCat_Core)
+                # dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, Size.base // 4, Size.base // 4, category=dpg.mvThemeCat_Core)
+            with dpg.theme_component(dpg.mvChildWindow):
+                dpg.add_theme_style(dpg.mvStyleVar_WindowBorderSize, 2, 2, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_Border, (44, 44, 49), category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, Size.base // 4, Size.base // 4, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, Size.base // 2, Size.base // 2, category=dpg.mvThemeCat_Core)
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, Size.base // 4, Size.base // 4, category=dpg.mvThemeCat_Core)
+            with dpg.theme_component(dpg.mvCombo):
+                dpg.add_theme_style(dpg.mvStyleVar_PopupRounding, Size.base // 4, Size.base // 4, category=dpg.mvThemeCat_Core)
+            with dpg.theme_component(dpg.mvCheckbox):
+                dpg.add_theme_style(dpg.mvStyleVar_ItemInnerSpacing, Size.base // 2, Size.base // 4, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_FrameBorderSize, 2, 2, category=dpg.mvThemeCat_Core)
+            with dpg.theme_component(dpg.mvText):
+                dpg.add_theme_style(dpg.mvStyleVar_ItemInnerSpacing, 0, 0, category=dpg.mvThemeCat_Core)
+            with dpg.theme_component(dpg.mvTable):
+                dpg.add_theme_style(dpg.mvStyleVar_ItemInnerSpacing, Size.base // 4, Size.base // 4, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_CellPadding, Size.base // 2, Size.base // 2, category=dpg.mvThemeCat_Core)
+        dpg.bind_theme(global_theme)
+
+    def __child_window_style(self):
+        pass
+
+    def __custom_widget_style(self):
         pass
 
     def set_title(self, uuid=None):
@@ -115,6 +153,15 @@ class _Style:
 
     def set_dialog(self, uuid=None):
         dpg.bind_item_theme(self.__get_uuid(uuid), self.uuid_window_dialog)
+
+    def set_table(self, uuid=None, frame_padding_x=0, frame_padding_y=0, cell_padding_x=0, cell_padding_y=0):
+        with dpg.theme() as tmp:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 0, 0, category=dpg.mvThemeCat_Core)
+            with dpg.theme_component(dpg.mvTable):
+                dpg.add_theme_style(dpg.mvStyleVar_FramePadding, frame_padding_x, frame_padding_y, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_CellPadding, cell_padding_x, cell_padding_y, category=dpg.mvThemeCat_Core)
+            dpg.bind_item_theme(self.__get_uuid(uuid), tmp)
 
 
 # 单例对象
