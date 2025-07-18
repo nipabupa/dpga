@@ -61,14 +61,27 @@ def save_file():
 
 
 def start_loading(modal=True):
-    if modal and dpg.does_item_exist('backend_loading'):
-        dpg.delete_item('backend_loading')
+    if dpg.does_item_exist('modal_loading'):
+        return
     if modal:
-        with dpg.window():
-            pass
+        if dpg.does_item_exist('backend_loading'):
+            dpg.delete_item('backend_loading')
+        with dpg.window(tag='modal_loading',
+                        no_background=True,
+                        no_collapse=True,
+                        no_move=True,
+                        no_resize=True,
+                        no_title_bar=True):
+            dpg.add_loading_indicator(radius=3, style=1)
     else:
-        with dpg.window():
-            pass
+        if dpg.does_item_exist('backend_loading'):
+            return
+        with dpg.window(tag='backend_loading',
+                        no_collapse=True,
+                        no_move=True,
+                        no_resize=True,
+                        no_title_bar=True):
+            dpg.add_loading_indicator(radius=1, style=1)
 
 
 def stop_loading():
@@ -105,8 +118,8 @@ def _common_ui(info: AppInfo):
     公共UI
     """
     # header
-    with dpg.table(header_row=False, borders_outerH=True, borders_innerV=True):
-        Style.set_table()
+    with dpg.table(header_row=False, pos=(info.base, info.base)) as t:
+        Style.set_table(t, frame_padding_x=Size.base // 4, frame_padding_y=Size.base // 4, cell_padding_x=Size.base // 4, cell_padding_y=Size.base // 4)
         dpg.add_table_column(width_fixed=True)
         dpg.add_table_column(width_stretch=True)
         dpg.add_table_column(width_fixed=True)
@@ -122,7 +135,7 @@ def _common_ui(info: AppInfo):
                     dpg.add_image_button('zoom.png',
                                          width=Size.base,
                                          height=Size.window_padding_x,
-                                         callback=lambda: dpg.maximize_viewport())
+                                         callback=_zoom, user_data=(info.width, info.height))
                     dpg.add_image_button('close.png',
                                          width=Size.window_padding_x,
                                          height=Size.window_padding_x,
@@ -139,6 +152,21 @@ def _common_ui(info: AppInfo):
     # 拖拽
     with dpg.handler_registry():
         dpg.add_mouse_drag_handler(button=0, threshold=0.0, callback=_drag_viewport)
+
+
+is_maximizing_viewport = False
+
+
+def _zoom(sender, _, userdata):
+    global is_maximizing_viewport
+    if is_maximizing_viewport:
+        dpg.set_viewport_width(userdata[0])
+        dpg.set_viewport_height(userdata[1])
+        dpg.set_viewport_resizable(True)
+        is_maximizing_viewport = False
+    else:
+        dpg.maximize_viewport()
+        is_maximizing_viewport = True
 
 
 def _create_uuid(obj):
@@ -162,6 +190,7 @@ def build_app(info: AppInfo, views=[]):
         decorated=False)
     win = dpg.add_window()
     dpg.set_primary_window(win, True)
+    dpg.configure_item(win, no_scrollbar=True, no_scroll_with_mouse=True)
     dpg.push_container_stack(win)
     _common_ui(info)
     yield
@@ -175,6 +204,6 @@ def build_app(info: AppInfo, views=[]):
 def _drag_viewport(_, app_data):
     _, drag_dx, drag_dy = app_data
     drag_start_y = dpg.get_mouse_pos(local=False)[1] - drag_dy
-    if drag_start_y < Size.window_padding_y * 3:
+    if drag_start_y < Size.window_padding_y * 1:
         x_pos, y_pos = dpg.get_viewport_pos()
         dpg.set_viewport_pos((x_pos + drag_dx, max(0, y_pos + drag_dy)))  # type: ignore
